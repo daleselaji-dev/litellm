@@ -1,0 +1,37 @@
+# Declarative DB-state seed for the ephemeral per-SHA e2e stack, applied by
+# seed-e2e.py between deploy-ephemeral and e2e-run: every model listed here
+# is registered through /model/new (the same path the Admin UI uses) unless
+# a model with that model_name already exists.
+#
+# Syntax: JSON (a YAML subset), parsed with stdlib json after full-line
+# comments are stripped. Each entry is a /model/new request body, credentials
+# always as os.environ/... references resolved from the proxy's own env
+# (litellm-provider-keys); never a literal secret, never a pg_dump of stage.
+#
+# The models list starts EMPTY on purpose. Auditing stage's 1400+
+# DB-registered models showed they are self-provisioning-test debris, not
+# required ambient state: batches, spend_tracking, claude_code, rerank, and
+# realtime all register their own deployments via /model/new and tear them
+# down. Add an entry here only when a suite failure proves a test expects a
+# DB-backed model to pre-exist.
+#
+# The users are the Admin UI Playwright suite's login fixtures
+# (tests/e2e/ui/fixtures/users.ts): its globalSetup logs each role in with
+# these exact credentials, which exist in stage's long-lived DB but not in a
+# fresh one (build 27's UI global setup timed out on the proxy_admin_viewer
+# login). The proxy_admin role is the master key and needs no row. The
+# teamadmin fixture is an internal_user; team-admin-ness is a membership the
+# tests create themselves. Passwords are public test fixtures, not secrets.
+#
+# Make-it-right home: tests/e2e/environment/ in the litellm repo, baked into
+# the e2e runner image so tests and environment contract version together.
+# The pipeline dir is the PoC home.
+{
+  "models": [],
+  "users": [
+    {"user_email": "adminviewer@test.local", "password": "test", "user_role": "proxy_admin_viewer", "auto_create_key": false},
+    {"user_email": "internal@test.local", "password": "test", "user_role": "internal_user", "auto_create_key": false},
+    {"user_email": "viewer@test.local", "password": "test", "user_role": "internal_user_viewer", "auto_create_key": false},
+    {"user_email": "teamadmin@test.local", "password": "test", "user_role": "internal_user", "auto_create_key": false}
+  ]
+}
